@@ -39,6 +39,8 @@ namespace Client
             var content = new StringContent(_crypto.ClientPublic, Encoding.UTF8, "application/xml");
             var response = await _httpClient.PostAsync("/stage1", content);
             var serverKey = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine("Server Public Key: {0}", serverKey);
             
             _crypto.AddServerKey(serverKey);
         }
@@ -51,12 +53,16 @@ namespace Client
         {
             var challenge = _crypto.GetRandomData(128);
             _crypto.ClientChallenge = challenge;
+
+            Console.WriteLine("Generated Challenge: {0}", Convert.ToBase64String(challenge));
             
             var encryptedChallenge = _crypto.EncryptData(challenge);
             var content = new ByteArrayContent(encryptedChallenge);
             var response = await _httpClient.PostAsync("/stage2", content);
             var encryptedSessionKey = await response.Content.ReadAsByteArrayAsync();
             var sessionKey = _crypto.DecryptData(encryptedSessionKey);
+
+            Console.WriteLine("Session Key: {0}", Convert.ToBase64String(sessionKey));
             
             _crypto.SessionKey = sessionKey;
         }
@@ -71,9 +77,11 @@ namespace Client
             var encryptedChallenge = await response.Content.ReadAsByteArrayAsync();
             var challenge = _crypto.DecryptData2(encryptedChallenge);
 
+            Console.WriteLine("Challenge Response: {0}", Convert.ToBase64String(challenge));
+
             Console.WriteLine(_crypto.ClientChallenge.SequenceEqual(challenge)
-                ? "SUCCESS"
-                : "FAIL");
+                ? "Challenges match"
+                : "Challenges do not match");
         }
     }
 }

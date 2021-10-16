@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -23,6 +24,9 @@ namespace Server.Controllers
 
             using var sr = new StreamReader(HttpContext.Request.Body);
             var clientKey = await sr.ReadToEndAsync();
+
+            Console.WriteLine("Public Key from Client ({0}): {1}", clientGuid, clientKey);
+            
             var serverKey = _cryptoService.AddClientPublicKey(clientGuid, clientKey);
 
             return new ContentResult
@@ -42,6 +46,8 @@ namespace Server.Controllers
 
             var encryptedChallenge = ms.ToArray();
             var decryptedChallenge = _cryptoService.DecryptData(encryptedChallenge);
+            
+            Console.WriteLine("Challenge from Client ({0}): {1}", clientGuid, Convert.ToBase64String(decryptedChallenge));
             
             _cryptoService.AddClientChallenge(clientGuid, decryptedChallenge);
 
